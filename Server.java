@@ -5,35 +5,38 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLOutput;
 
 public class Server {
     // check input from client
     public static boolean validateData(String message) {
         String[] arrStr = message.split(",");
+        if(arrStr.length != 2) return false;
 
-        if(arrStr.length == 2
-                || arrStr.length == 0
-                || arrStr.length == 3
-                || arrStr.length > 4
-        ) return false;
-
-        if(arrStr[0].equals("User name")) {
-            for(int i=0; i < arrStr[1].length(); i++){
-                if (arrStr[1].charAt(i) < 65  || arrStr[1].charAt(i) > 90) return false;
+        String[] userFirstInfo = arrStr[0].split("\"");
+        String[] userSecondInfo = arrStr[1].split("\"");
+        if(userFirstInfo[1].toUpperCase().equals("USER NAME")) {
+            for(int i=0; i < userFirstInfo[3].length(); i++){
+                int n = userFirstInfo[3].charAt(i);
+                if (userFirstInfo[3].toUpperCase().charAt(i) < 65  || userFirstInfo[3].toUpperCase().charAt(i) > 90) return false;
             }
-            if(arrStr[2].equals("User age")) {
-                for(int i=0; i < arrStr[3].length(); i++){
-                    if (arrStr[3].charAt(i) < 48  || (arrStr[3].charAt(i) > 57)) return false;
+            if(userSecondInfo[1].toUpperCase().equals("USER AGE")) {
+                for(int i=0; i < userSecondInfo[3].length(); i++){
+                    if (userSecondInfo[3].toUpperCase().charAt(i) < 48  || (userSecondInfo[3].toUpperCase().charAt(i) > 57)) return false;
                 }
             }
+            else return false;
         }
-        else if(arrStr[0].equals("User age")) {
+        else if(userFirstInfo[1].toUpperCase().equals("USER AGE")) {
             for(int i=0; i < arrStr[1].length(); i++){
-                if (arrStr[1].charAt(i) < 48  || arrStr[1].charAt(i) > 57) return false;
+                if (userFirstInfo[3].toUpperCase().charAt(i) < 48  || userFirstInfo[3].toUpperCase().charAt(i) > 57) return false;
             }
-            for(int i=0; i < arrStr[3].length(); i++){
-                if (arrStr[3].charAt(i) < 65  || arrStr[3].charAt(i) > 90) return false;
+            if(userSecondInfo[1].toUpperCase().equals("USER AGE")) {
+                for(int i=0; i < userSecondInfo[3].length(); i++){
+                    if (userSecondInfo[3].toUpperCase().charAt(i) < 65  || userSecondInfo[3].toUpperCase().charAt(i) > 90) return false;
+                }
             }
+            else return false;
         }
 
         return true;
@@ -46,6 +49,7 @@ public class Server {
         String NOT_READY = "Type Hello Server to start";
         String USER_INF_OK = "211 User Infor OK";
         String USER_INF_ERR = "400 User Infor Error";
+        String WRONG_SYNTAX = "Wrong syntax";
 
         final int serverPort = 9999;
         ServerSocket listener = null;
@@ -91,16 +95,18 @@ public class Server {
                     servReady = true;
                     os.write(HELLO_CLIENT);
                 }
-
-                if(servReady) {
-                    if(!typingUserInf && line.toUpperCase().equals("USER INFO")) {
+                else if(servReady) {
+                    if(line.toUpperCase().equals("USER INFO")) {
                         os.write(READY);
                         typingUserInf = true;
                     }
                     else if(typingUserInf) {
                         if(validateData(line))  os.write(USER_INF_OK);
                         else os.write(USER_INF_ERR);
+                        typingUserInf = false;
                     }
+                    else os.write(WRONG_SYNTAX);
+
                 }
                 else {
                     os.write(NOT_READY);
@@ -124,3 +130,4 @@ public class Server {
         System.out.println("Sever stopped!");
     }
 }
+
